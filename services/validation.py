@@ -1,5 +1,7 @@
 """Server-side validation independent of browser constraints."""
 from urllib.parse import urlsplit
+from datetime import date
+import json
 
 def validate(fields, form):
     values, errors = {}, []
@@ -17,5 +19,32 @@ def validate(fields, form):
                     raise ValueError
             except ValueError:
                 errors.append(f'{label} must be an http:// or https:// URL.')
-        values[name] = raw or None
+        value = raw or None
+        if field['kind'] in ('number', 'company') and raw:
+            minimum = 1 if field['kind'] == 'company' else 0
+            try:
+                value = int(raw)
+                if not minimum <= value <= 2147483647:
+                    raise ValueError
+            except ValueError:
+                errors.append(f'{label} must be a whole number between {minimum} and 2147483647.')
+                value = None
+        if field['kind'] == 'select' and raw and raw not in field['choices']:
+            errors.append(f'{label} is not a valid option.')
+        if field['kind'] == 'date' and raw:
+            try:
+                value = date.fromisoformat(raw).isoformat()
+            except ValueError:
+                errors.append(f'{label} must be a valid date.')
+        if field['kind'] == 'skills':
+            skills = {}
+            for skill in raw.split(','):
+                skill = skill.strip()
+                if skill:
+                    skills.setdefault(skill.casefold(), skill)
+            value = json.dumps(list(skills.values()))
+        values[name] = value
+    low, high = values.get('salary_min'), values.get('salary_max')
+    if isinstance(low, int) and isinstance(high, int) and low > high:
+        errors.append('Minimum salary cannot exceed maximum salary.')
     return values, errors
