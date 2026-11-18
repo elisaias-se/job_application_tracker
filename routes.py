@@ -44,8 +44,8 @@ def list_records(entity):
     if entity == 'applications':
         sql = ('SELECT applications.*, jobs.job_title, companies.company_name FROM applications '
                'JOIN jobs USING (job_id) JOIN companies USING (company_id)')
-    elif entity == 'jobs':
-        sql = 'SELECT jobs.*, companies.company_name FROM jobs JOIN companies USING (company_id)'
+    elif entity in ('jobs', 'contacts'):
+        sql = f'SELECT {entity}.*, companies.company_name FROM {entity} JOIN companies USING (company_id)'
     else:
         sql = f'SELECT * FROM {entity}'
     conditions, params = [], []
@@ -68,7 +68,7 @@ def list_records(entity):
 def detail(entity, record_id):
     config = entity_config(entity)
     record = get_record(entity, record_id)
-    if entity == 'jobs':
+    if entity in ('jobs', 'contacts'):
         company = get_record('companies', record['company_id'])
         record['company_id'] = company['company_name']
     if entity == 'applications':
@@ -86,12 +86,12 @@ def edit_record(entity, record_id=None):
     if entity == 'applications' and record_id is None:
         record = {'status': 'Applied', 'interview_data': []}
     errors = []
-    companies = query('SELECT company_id, company_name FROM companies ORDER BY company_name') if entity == 'jobs' else []
+    companies = query('SELECT company_id, company_name FROM companies ORDER BY company_name') if entity in ('jobs', 'contacts') else []
     jobs = query('SELECT jobs.job_id, jobs.job_title, companies.company_name FROM jobs JOIN companies USING (company_id) ORDER BY job_title, company_name, job_id') if entity == 'applications' else []
     interviews = record.get('interview_data', [])
     if request.method == 'POST':
         values, errors = validate(config['fields'], request.form)
-        if entity == 'jobs' and values.get('company_id') not in {c['company_id'] for c in companies}:
+        if entity in ('jobs', 'contacts') and values.get('company_id') not in {c['company_id'] for c in companies}:
             errors.append('Select an existing company. Add a company first if necessary.')
         if entity == 'applications':
             interviews = interview_rows(request.form)

@@ -2,6 +2,7 @@
 from urllib.parse import urlsplit
 from datetime import date, datetime
 import json
+import re
 
 def validate(fields, form):
     values, errors = {}, []
@@ -19,6 +20,8 @@ def validate(fields, form):
                     raise ValueError
             except ValueError:
                 errors.append(f'{label} must be an http:// or https:// URL.')
+        if field['kind'] == 'email' and raw and not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', raw):
+            errors.append(f'{label} must be a valid email address.')
         value = raw or None
         if field['kind'] in ('number', 'company', 'job') and raw:
             minimum = 1 if field['kind'] in ('company', 'job') else 0

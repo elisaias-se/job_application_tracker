@@ -6,7 +6,7 @@
 {% if field.kind == 'company' %}{% for company in companies %}<option value="{{ company.company_id }}" {% if record.get(field.name)|string == company.company_id|string %}selected{% endif %}>{{ company.company_name }}</option>{% endfor %}
 {% elif field.kind == 'job' %}{% for job in jobs %}<option value="{{ job.job_id }}" {% if record.get(field.name)|string == job.job_id|string %}selected{% endif %}>{{ job.job_title }} · {{ job.company_name }}</option>{% endfor %}
 {% else %}{% for choice in field.choices %}<option value="{{ choice }}" {% if record.get(field.name) == choice %}selected{% endif %}>{{ choice }}</option>{% endfor %}{% endif %}</select>
-{% if field.kind == 'company' and not companies %}<p class="hint">Add a <a href="/companies/new">company</a> before saving a job.</p>{% endif %}
+{% if field.kind == 'company' and not companies %}<p class="hint">Add a <a href="/companies/new">company</a> before saving a {{ config.singular|lower }}.</p>{% endif %}
 {% if field.kind == 'job' and not jobs %}<p class="hint">Add a <a href="/jobs/new">job</a> before saving an application.</p>{% endif %}
 {% elif field.kind == 'checkbox' %}<input id="{{ field.name }}" type="checkbox" name="{{ field.name }}" value="1" {% if record.get(field.name) %}checked{% endif %}>
 {% elif field.kind == 'interviews' %}{% include 'interviews_form.html' %}

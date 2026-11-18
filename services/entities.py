@@ -25,4 +25,12 @@ ENTITIES = {
         field('resume_version', 'Resume version', limit=50),
         field('cover_letter_sent', 'Cover letter sent', 'checkbox'),
         field('interview_data', 'Interviews', 'interviews')]),
+    'contacts': dict(title='Contacts', singular='Contact', pk='contact_id', label='contact_name', fields=[
+        field('contact_name', 'Contact name', required=True, limit=100),
+        field('company_id', 'Company', 'company', required=True),
+        field('title', 'Title', limit=100),
+        field('email', 'Email', 'email', limit=100),
+        field('phone', 'Phone', 'tel', limit=20),
+        field('linkedin_url', 'LinkedIn URL', 'url', limit=200),
+        field('notes', 'Notes', 'textarea')]),
 }
