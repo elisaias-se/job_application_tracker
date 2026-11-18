@@ -1,0 +1,12 @@
+{% macro interview_row(interview={}) %}
+<fieldset class="panel interview-row"><legend>Interview</legend>
+<label>Date and time<input type="datetime-local" name="interview_date" value="{{ interview.get('date', '') }}"></label>
+<label>Format<select name="interview_format"><option value="">Select format</option>{% for format in ['Phone','Video','In-person','Other'] %}<option {% if interview.get('format') == format %}selected{% endif %}>{{ format }}</option>{% endfor %}</select></label>
+<label>Interviewer<input name="interview_interviewer" value="{{ interview.get('interviewer', '') }}"></label>
+<label>Notes<textarea name="interview_notes">{{ interview.get('notes', '') }}</textarea></label>
+<button type="button" class="danger remove-interview">Remove interview</button></fieldset>
+{% endmacro %}
+<p class="hint">Optional. Add interviews as they are scheduled. Times use your local timezone.</p>
+<div id="interviews">{% for interview in interviews %}{{ interview_row(interview) }}{% endfor %}</div>
+<template id="interview-template">{{ interview_row() }}</template>
+<button type="button" id="add-interview">+ Add interview</button>

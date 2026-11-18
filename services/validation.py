@@ -1,6 +1,6 @@
 """Server-side validation independent of browser constraints."""
 from urllib.parse import urlsplit
-from datetime import date
+from datetime import date, datetime
 import json
 
 def validate(fields, form):
@@ -20,8 +20,8 @@ def validate(fields, form):
             except ValueError:
                 errors.append(f'{label} must be an http:// or https:// URL.')
         value = raw or None
-        if field['kind'] in ('number', 'company') and raw:
-            minimum = 1 if field['kind'] == 'company' else 0
+        if field['kind'] in ('number', 'company', 'job') and raw:
+            minimum = 1 if field['kind'] in ('company', 'job') else 0
             try:
                 value = int(raw)
                 if not minimum <= value <= 2147483647:
@@ -43,8 +43,33 @@ def validate(fields, form):
                 if skill:
                     skills.setdefault(skill.casefold(), skill)
             value = json.dumps(list(skills.values()))
+        if field['kind'] == 'checkbox':
+            value = raw in ('on', '1')
+        if field['kind'] == 'interviews':
+            interviews = interview_rows(form)
+            for index, interview in enumerate(interviews, 1):
+                try:
+                    datetime.fromisoformat(interview['date'])
+                except ValueError:
+                    errors.append(f'Interview {index} needs a valid date and time.')
+                if interview['format'] not in ('Phone', 'Video', 'In-person', 'Other'):
+                    errors.append(f'Interview {index} needs a valid format.')
+            value = json.dumps(interviews)
         values[name] = value
     low, high = values.get('salary_min'), values.get('salary_max')
     if isinstance(low, int) and isinstance(high, int) and low > high:
         errors.append('Minimum salary cannot exceed maximum salary.')
     return values, errors
+
+
+def interview_rows(form):
+    """Read repeated interview inputs, keeping incomplete rows for validation."""
+    names = ('date', 'format', 'interviewer', 'notes')
+    columns = [form.getlist('interview_' + name) for name in names] if hasattr(form, 'getlist') else []
+    rows = []
+    for index in range(max((len(column) for column in columns), default=0)):
+        row = {name: (columns[i][index].strip() if index < len(columns[i]) else '')
+               for i, name in enumerate(names)}
+        if any(row.values()):
+            rows.append(row)
+    return rows

@@ -2,8 +2,8 @@ import json
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from mysql.connector import IntegrityError
 from database import query
-from services.entities import ENTITIES
-from services.validation import validate
+from services.entities import ENTITIES, APPLICATION_STATUSES
+from services.validation import validate, interview_rows
 
 bp = Blueprint('main', __name__)
 
@@ -18,7 +18,9 @@ def entity_config(entity):
 
 def get_record(entity, record_id):
     config = entity_config(entity)
-    records = query(f'SELECT * FROM {entity} WHERE {config["pk"]} = %s', (record_id,))
+    sql = ('SELECT applications.*, jobs.job_title FROM applications JOIN jobs USING (job_id) WHERE application_id = %s'
+           if entity == 'applications' else f'SELECT * FROM {entity} WHERE {config["pk"]} = %s')
+    records = query(sql, (record_id,))
     if not records:
         abort(404)
     record = records[0]
@@ -27,20 +29,40 @@ def get_record(entity, record_id):
         if isinstance(skills, str):
             skills = json.loads(skills)
         record['requirements'] = ', '.join(skills)
+    if entity == 'applications':
+        interviews = record.get('interview_data') or []
+        record['interview_data'] = json.loads(interviews) if isinstance(interviews, str) else interviews
     return record
 
 @bp.route('/<entity>')
 def list_records(entity):
     config = entity_config(entity)
     search = request.args.get('q', '').strip()
-    sql = ("SELECT jobs.*, companies.company_name FROM jobs JOIN companies USING (company_id)"
-           if entity == 'jobs' else f'SELECT * FROM {entity}')
-    params = ()
+    selected_status = request.args.get('status', '') if entity == 'applications' else ''
+    if selected_status and selected_status not in APPLICATION_STATUSES:
+        abort(400)
+    if entity == 'applications':
+        sql = ('SELECT applications.*, jobs.job_title, companies.company_name FROM applications '
+               'JOIN jobs USING (job_id) JOIN companies USING (company_id)')
+    elif entity == 'jobs':
+        sql = 'SELECT jobs.*, companies.company_name FROM jobs JOIN companies USING (company_id)'
+    else:
+        sql = f'SELECT * FROM {entity}'
+    conditions, params = [], []
     if search:
-        sql += f' WHERE {config["label"]} LIKE %s'
-        params = (f'%{search}%',)
-    rows = query(sql + f' ORDER BY {config["label"]}, {config["pk"]}', params)
-    return render_template('records.html', title=config['title'], entity=entity, config=config, rows=rows, search=search)
+        conditions.append(f'{config["label"]} LIKE %s')
+        params.append(f'%{search}%')
+    if selected_status:
+        conditions.append('status = %s')
+        params.append(selected_status)
+    if conditions:
+        sql += ' WHERE ' + ' AND '.join(conditions)
+    order = ('application_date DESC, application_id DESC' if entity == 'applications'
+             else f'{config["label"]}, {config["pk"]}')
+    rows = query(sql + ' ORDER BY ' + order, tuple(params))
+    return render_template('records.html', title=config['title'], entity=entity, config=config,
+                           rows=rows, search=search, selected_status=selected_status,
+                           statuses=APPLICATION_STATUSES)
 
 @bp.route('/<entity>/<int:record_id>')
 def detail(entity, record_id):
@@ -49,6 +71,11 @@ def detail(entity, record_id):
     if entity == 'jobs':
         company = get_record('companies', record['company_id'])
         record['company_id'] = company['company_name']
+    if entity == 'applications':
+        job = get_record('jobs', record['job_id'])
+        company = get_record('companies', job['company_id'])
+        record['job_title'] = job['job_title']
+        record['job_id'] = job['job_title'] + ' · ' + company['company_name']
     return render_template('detail.html', title=config['singular'], entity=entity, config=config, record=record)
 
 @bp.route('/<entity>/new', methods=['GET', 'POST'])
@@ -56,12 +83,20 @@ def detail(entity, record_id):
 def edit_record(entity, record_id=None):
     config = entity_config(entity)
     record = get_record(entity, record_id) if record_id is not None else {}
+    if entity == 'applications' and record_id is None:
+        record = {'status': 'Applied', 'interview_data': []}
     errors = []
     companies = query('SELECT company_id, company_name FROM companies ORDER BY company_name') if entity == 'jobs' else []
+    jobs = query('SELECT jobs.job_id, jobs.job_title, companies.company_name FROM jobs JOIN companies USING (company_id) ORDER BY job_title, company_name, job_id') if entity == 'applications' else []
+    interviews = record.get('interview_data', [])
     if request.method == 'POST':
         values, errors = validate(config['fields'], request.form)
         if entity == 'jobs' and values.get('company_id') not in {c['company_id'] for c in companies}:
             errors.append('Select an existing company. Add a company first if necessary.')
+        if entity == 'applications':
+            interviews = interview_rows(request.form)
+            if values.get('job_id') not in {job['job_id'] for job in jobs}:
+                errors.append('Select an existing job. Add a job first if necessary.')
         if not errors:
             columns = list(values)
             params = tuple(values.values())
@@ -73,12 +108,12 @@ def edit_record(entity, record_id=None):
                     sql = f'UPDATE {entity} SET {", ".join(c + " = %s" for c in columns)} WHERE {config["pk"]} = %s'
                     query(sql, params + (record_id,), write=True)
             except IntegrityError:
-                errors.append('The selected company is no longer available. Choose another company.')
+                errors.append('The selected job is no longer available. Choose another job.' if entity == 'applications' else 'The selected company is no longer available. Choose another company.')
             if not errors:
                 flash(f'{config["singular"]} saved.', 'success')
                 return redirect(url_for('main.detail', entity=entity, record_id=record_id))
         record = request.form.to_dict()
-    return render_template('form.html', title=('Edit ' if record_id else 'Add ') + config['singular'], entity=entity, config=config, record=record, errors=errors, companies=companies), (422 if errors else 200)
+    return render_template('form.html', title=('Edit ' if record_id else 'Add ') + config['singular'], entity=entity, config=config, record=record, errors=errors, companies=companies, jobs=jobs, interviews=interviews), (422 if errors else 200)
 
 @bp.route('/<entity>/<int:record_id>/delete', methods=['GET', 'POST'])
 def delete_record(entity, record_id):

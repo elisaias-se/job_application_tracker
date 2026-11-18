@@ -2,10 +2,16 @@
 {% for error in errors %}<div class="notice error" role="alert">{{ error }}</div>{% endfor %}
 <form method="post" class="panel form-panel"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 {% for field in config.fields %}<div class="field"><label for="{{ field.name }}">{{ field.label }}{{ ' *' if field.required else '' }}</label>
-{% if field.kind in ('select', 'company') %}<select id="{{ field.name }}" name="{{ field.name }}" {% if field.required %}required{% endif %}><option value="">Select {{ field.label|lower }}</option>
+{% if field.kind in ('select', 'company', 'job') %}<select id="{{ field.name }}" name="{{ field.name }}" {% if field.required %}required{% endif %}><option value="">Select {{ field.label|lower }}</option>
 {% if field.kind == 'company' %}{% for company in companies %}<option value="{{ company.company_id }}" {% if record.get(field.name)|string == company.company_id|string %}selected{% endif %}>{{ company.company_name }}</option>{% endfor %}
+{% elif field.kind == 'job' %}{% for job in jobs %}<option value="{{ job.job_id }}" {% if record.get(field.name)|string == job.job_id|string %}selected{% endif %}>{{ job.job_title }} · {{ job.company_name }}</option>{% endfor %}
 {% else %}{% for choice in field.choices %}<option value="{{ choice }}" {% if record.get(field.name) == choice %}selected{% endif %}>{{ choice }}</option>{% endfor %}{% endif %}</select>
 {% if field.kind == 'company' and not companies %}<p class="hint">Add a <a href="/companies/new">company</a> before saving a job.</p>{% endif %}
+{% if field.kind == 'job' and not jobs %}<p class="hint">Add a <a href="/jobs/new">job</a> before saving an application.</p>{% endif %}
+{% elif field.kind == 'checkbox' %}<input id="{{ field.name }}" type="checkbox" name="{{ field.name }}" value="1" {% if record.get(field.name) %}checked{% endif %}>
+{% elif field.kind == 'interviews' %}{% include 'interviews_form.html' %}
 {% elif field.kind == 'textarea' %}<textarea id="{{ field.name }}" name="{{ field.name }}">{{ record.get(field.name) or '' }}</textarea>
 {% else %}<input id="{{ field.name }}" name="{{ field.name }}" type="{{ 'text' if field.kind == 'skills' else field.kind }}" value="{{ record.get(field.name) if record.get(field.name) is not none else '' }}" {% if field.kind == 'number' %}min="0" max="2147483647" step="1"{% endif %} {% if field.required %}required{% endif %} {% if field.limit %}maxlength="{{ field.limit }}"{% endif %}>{% endif %}{% if field.kind == 'skills' %}<p class="hint">Separate skills with commas, for example: Python, SQL, Flask.</p>{% endif %}</div>{% endfor %}
 <div class="actions-row"><button>Save {{ config.singular|lower }}</button><a href="{{ url_for('main.list_records', entity=entity) }}">Cancel</a></div></form>{% endblock %}
+
+{% block scripts %}{% if entity == 'applications' %}<script src="{{ url_for('static', filename='js/interviews.js') }}" defer></script>{% endif %}{% endblock %}

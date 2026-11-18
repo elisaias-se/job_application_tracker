@@ -2,6 +2,8 @@
 def field(name, label, kind='text', required=False, limit=None, choices=()):
     return dict(name=name, label=label, kind=kind, required=required, limit=limit, choices=choices)
 
+APPLICATION_STATUSES = ('Applied', 'Screening', 'Interview', 'Offer', 'Rejected', 'Withdrawn')
+
 ENTITIES = {
     'companies': dict(title='Companies', singular='Company', pk='company_id', label='company_name', fields=[
         field('company_name', 'Company name', required=True, limit=100),
@@ -16,4 +18,11 @@ ENTITIES = {
         field('job_url', 'Job posting URL', 'url', limit=300),
         field('date_posted', 'Date posted', 'date'),
         field('requirements', 'Required skills', 'skills')]),
+    'applications': dict(title='Applications', singular='Application', pk='application_id', label='job_title', fields=[
+        field('job_id', 'Job', 'job', required=True),
+        field('application_date', 'Application date', 'date', required=True),
+        field('status', 'Status', 'select', required=True, choices=APPLICATION_STATUSES),
+        field('resume_version', 'Resume version', limit=50),
+        field('cover_letter_sent', 'Cover letter sent', 'checkbox'),
+        field('interview_data', 'Interviews', 'interviews')]),
 }
