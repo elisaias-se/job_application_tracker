@@ -1,0 +1,7 @@
+{% extends 'base.html' %}{% block content %}<h1>{{ title }}</h1><p class="muted">Fields marked * are required.</p>
+{% for error in errors %}<div class="notice error" role="alert">{{ error }}</div>{% endfor %}
+<form method="post" class="panel form-panel"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% for field in config.fields %}<div class="field"><label for="{{ field.name }}">{{ field.label }}{{ ' *' if field.required else '' }}</label>
+{% if field.kind == 'textarea' %}<textarea id="{{ field.name }}" name="{{ field.name }}">{{ record.get(field.name) or '' }}</textarea>
+{% else %}<input id="{{ field.name }}" name="{{ field.name }}" type="{{ field.kind }}" value="{{ record.get(field.name) or '' }}" {% if field.required %}required{% endif %} {% if field.limit %}maxlength="{{ field.limit }}"{% endif %}>{% endif %}</div>{% endfor %}
+<div class="actions-row"><button>Save {{ config.singular|lower }}</button><a href="{{ url_for('main.list_records', entity=entity) }}">Cancel</a></div></form>{% endblock %}
