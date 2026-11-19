@@ -1,4 +1,4 @@
-# Opportunity · Job Application Tracker
+# JobTrack · Job Application Tracker
 
 A Flask and MySQL course project for organizing companies, saved jobs, applications, and professional contacts. Includes a dashboard and a deterministic skill matching feature. Built with Python, server-rendered HTML/Jinja, custom CSS, and small JavaScript enhancements. No AI API key or paid service is required.
 

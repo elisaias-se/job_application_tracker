@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>Find your next fit.</h1>
+<h1>Job match</h1>
 <p class="muted">Compare your skills with the roles you have saved.</p>
 {% for error in errors %}<div class="notice error" role="alert">{{ error }}</div>{% endfor %}
 <form method="get" class="panel" action="{{ url_for('main.job_match') }}">
@@ -25,6 +25,6 @@
 </article>
 {% else %}<div class="panel empty">No saved jobs yet. <a href="{{ url_for('main.edit_record', entity='jobs') }}">Save your first job</a> and add its required skills to get started.</div>{% endfor %}
 {% elif not submitted %}
-<div class="panel"><h2>A clearer picture of your options.</h2><p class="muted">Enter your skills above to rank your saved jobs, see where you already match, and identify skills you may want to develop.</p></div>
+<div class="panel"><h2>Compare required skills</h2><p class="muted">Enter your skills to see ranked jobs and their matched and missing requirements.</p></div>
 {% endif %}
 {% endblock %}

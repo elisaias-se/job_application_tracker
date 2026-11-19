@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="heading">
-  <div><h1>Your next chapter starts here.</h1><p class="muted">A little progress today. A new opportunity tomorrow.</p></div>
+  <div><h1>Dashboard</h1></div>
   <a class="button" href="{{ url_for('main.edit_record', entity='applications') }}">+ Track an application</a>
 </div>
 <div class="grid" aria-label="Workspace totals">
@@ -22,9 +22,7 @@
     {% if not counts.applications %}<p class="hint">Your pipeline will fill in when you add your first application.</p>{% endif %}
   </section>
   <section class="panel next-step" aria-labelledby="next-title">
-    <span class="eyebrow">KEEP MOVING FORWARD</span>
-    <h2 id="next-title">Make room for your next opportunity.</h2>
-    <p class="muted">Save a role that interests you, add the people you meet, and keep track of each step in your search.</p>
+    <h2 id="next-title">Quick actions</h2>
     <div class="quick-links">
       <a href="{{ url_for('main.edit_record', entity='companies') }}">Add a company <span aria-hidden="true">↗</span></a>
       <a href="{{ url_for('main.edit_record', entity='jobs') }}">Save a job <span aria-hidden="true">↗</span></a>
