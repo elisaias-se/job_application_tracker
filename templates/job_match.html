@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Find your next fit.</h1>
+<p class="muted">Compare your skills with the roles you have saved.</p>
+{% for error in errors %}<div class="notice error" role="alert">{{ error }}</div>{% endfor %}
+<form method="get" class="panel" action="{{ url_for('main.job_match') }}">
+  <label for="skills">Your skills</label>
+  <textarea id="skills" name="skills" maxlength="5000" required placeholder="Python, SQL, Flask" aria-describedby="skills-help">{{ skills }}</textarea>
+  <p id="skills-help" class="hint">Separate skills with commas. Names match exactly, ignoring capitalization and surrounding spaces. For example, SQL and MySQL are separate skills.</p>
+  <button>Find matching jobs</button>
+</form>
+{% if submitted and not errors %}
+<div class="heading"><h2>{{ results|length }} saved {{ 'job' if results|length == 1 else 'jobs' }} compared</h2><a href="{{ url_for('main.list_records', entity='jobs') }}">Manage jobs →</a></div>
+<p class="hint">Match = your matched required skills ÷ the job's total required skills. Extra skills do not lower your score. Jobs without requirements appear last.</p>
+{% for job in results %}
+<article class="panel match-result" aria-labelledby="job-{{ job.job_id }}">
+  <div class="split">
+    <div><p class="eyebrow">{{ job.company_name }}</p><h2 id="job-{{ job.job_id }}"><a href="{{ url_for('main.detail', entity='jobs', record_id=job.job_id) }}">{{ job.job_title }}</a></h2>{% if job.job_type %}<span class="badge">{{ job.job_type }}</span>{% endif %}</div>
+    <div class="match-summary">{% if job.percentage is not none %}<span class="match-score">{{ job.percentage }}%</span><p class="hint">{{ job.matched|length }}/{{ job.required_count }} skills</p>{% else %}<span class="badge">Unscored</span>{% endif %}</div>
+  </div>
+  {% if job.percentage is not none %}
+    <p><strong>Matched:</strong> {{ job.matched|join(', ') if job.matched else 'No shared required skills yet.' }}</p>
+    <p><strong>Missing:</strong> {{ job.missing|join(', ') if job.missing else 'None — all required skills matched.' }}</p>
+  {% else %}<p class="muted">Requirements not specified. <a href="{{ url_for('main.edit_record', entity='jobs', record_id=job.job_id) }}">Add required skills</a> to include this role in scoring.</p>{% endif %}
+</article>
+{% else %}<div class="panel empty">No saved jobs yet. <a href="{{ url_for('main.edit_record', entity='jobs') }}">Save your first job</a> and add its required skills to get started.</div>{% endfor %}
+{% elif not submitted %}
+<div class="panel"><h2>A clearer picture of your options.</h2><p class="muted">Enter your skills above to rank your saved jobs, see where you already match, and identify skills you may want to develop.</p></div>
+{% endif %}
+{% endblock %}

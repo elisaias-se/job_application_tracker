@@ -3,6 +3,7 @@ from urllib.parse import urlsplit
 from datetime import date, datetime
 import json
 import re
+from services.matching import normalize_skills
 
 def validate(fields, form):
     values, errors = {}, []
@@ -40,12 +41,7 @@ def validate(fields, form):
             except ValueError:
                 errors.append(f'{label} must be a valid date.')
         if field['kind'] == 'skills':
-            skills = {}
-            for skill in raw.split(','):
-                skill = skill.strip()
-                if skill:
-                    skills.setdefault(skill.casefold(), skill)
-            value = json.dumps(list(skills.values()))
+            value = json.dumps(normalize_skills(raw))
         if field['kind'] == 'checkbox':
             value = raw in ('on', '1')
         if field['kind'] == 'interviews':

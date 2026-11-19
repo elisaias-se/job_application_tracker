@@ -5,6 +5,7 @@ from database import query
 from services.entities import ENTITIES, APPLICATION_STATUSES
 from services.validation import validate, interview_rows
 from services.dashboard import dashboard_data
+from services.matching import normalize_skills, rank_jobs
 
 bp = Blueprint('main', __name__)
 
@@ -129,3 +130,20 @@ def delete_record(entity, record_id):
         flash(f'{config["singular"]} deleted.', 'success')
         return redirect(url_for('main.list_records', entity=entity))
     return render_template('delete.html', title='Delete ' + config['singular'], config=config, record=record, entity=entity)
+
+
+@bp.route('/match')
+def job_match():
+    skills = request.args.get('skills', '')
+    submitted = 'skills' in request.args
+    errors, results = [], []
+    if submitted:
+        if len(skills) > 5000:
+            errors.append('Enter no more than 5,000 characters of skills.')
+        elif not normalize_skills(skills):
+            errors.append('Enter at least one skill to find matching jobs.')
+        else:
+            jobs = query('SELECT jobs.*, companies.company_name FROM jobs JOIN companies USING (company_id)')
+            results = rank_jobs(jobs, skills)
+    return render_template('job_match.html', title='Job match', skills=skills,
+                           submitted=submitted, results=results, errors=errors), (422 if errors else 200)
