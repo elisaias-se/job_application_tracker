@@ -25,7 +25,7 @@ A Flask and MySQL course project for organizing companies, saved jobs, applicati
 
 - Python 3.10 or newer (tested with Python 3.13).
 - MySQL 8.0.16 or newer, with a running server. MySQL 8.4 is used by CI.
-- Git and a terminal. MySQL command-line examples below use `mysql`; add your installation's `bin` directory to PATH if needed.
+- Git and Windows PowerShell. The MySQL command-line examples below use `mysql`; add your MySQL installation's `bin` directory to the Windows `Path` environment variable if needed.
 
 This is a local, single-user application. It does not include accounts or authentication. Keep the default loopback binding when running it for the course demonstration.
 
@@ -33,37 +33,45 @@ This is a local, single-user application. It does not include accounts or authen
 
 ### 1. Clone and install Python dependencies
 
-```sh
+```powershell
 git clone https://github.com/elisaias-se/job_application_tracker.git
-cd job_application_tracker
-python3 -m venv .venv
-source .venv/bin/activate
+Set-Location job_application_tracker
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
 
-On Windows, use `py -m venv .venv` and `.venv\Scripts\Activate.ps1` in PowerShell. The remaining Python commands are the same after activation.
+After activation, the prompt begins with `(.venv)`. If PowerShell prevents the activation script from running, allow local scripts for the current terminal session and try again:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+```
+
+This policy change lasts only until that PowerShell window is closed.
 
 ### 2. Install/start MySQL
 
-Use a local MySQL installation. For example, on macOS with Homebrew:
+Install MySQL Server 8.0.16 or newer for Windows and include the MySQL command-line client. During configuration, keep the TCP port (normally `3306`) and set a root password that you can use during database setup.
 
-```sh
-brew install mysql@8.4
-brew services start mysql@8.4
-export PATH="/opt/homebrew/opt/mysql@8.4/bin:$PATH"
+MySQL normally runs as a Windows service. To find and start it from an **Administrator PowerShell** window:
+
+```powershell
+Get-Service -Name 'MySQL*'
+Start-Service -Name 'MySQL80'
 ```
 
-The PATH above is for Apple Silicon. On Intel Macs, the prefix is typically `/usr/local` instead of `/opt/homebrew`. Windows and Linux users can use their existing MySQL server and client.
+The service name may differ by installation; use the name shown by `Get-Service`. If `mysql` is not recognized after installation, add the MySQL `bin` folder (commonly `C:\Program Files\MySQL\MySQL Server 8.4\bin`) to the Windows `Path`, then open a new PowerShell window.
 
 ### 3. Create the database
 
 Connect as a database administrator:
 
-```sh
+```powershell
 mysql -u root -p
 ```
 
-A fresh Homebrew installation may initially have an empty root password; press Enter at the password prompt in that case. From the MySQL prompt, with the terminal in the repository directory:
+Enter the root password selected during MySQL configuration. From the MySQL prompt, with PowerShell still in the repository directory:
 
 ```sql
 SOURCE schema.sql;
@@ -84,8 +92,8 @@ Run the seed once per demo database. It adds three companies, three jobs, six ap
 
 ### 4. Configure the application
 
-```sh
-cp .env.example .env
+```powershell
+Copy-Item .env.example .env
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
@@ -104,7 +112,7 @@ Keep `.env` private; it is ignored by Git. A stable secret keeps form tokens val
 
 ### 5. Run
 
-```sh
+```powershell
 python -m flask --app app:create_app run
 ```
 
@@ -180,7 +188,7 @@ A shared CRUD blueprint and field metadata keep the four resource workflows cons
 
 With the virtual environment active:
 
-```sh
+```powershell
 python -m pytest -q
 ```
 
@@ -188,14 +196,17 @@ Default tests cover validation, CRUD HTTP responses, bound parameters, escaping,
 
 To run the full suite, use a **local test administrator account** that can create/drop temporary databases. These settings are separate from the app's `.env` connection settings:
 
-```sh
-export MYSQL_TEST_ENABLE=1
-export MYSQL_TEST_HOST=127.0.0.1
-export MYSQL_TEST_PORT=3306
-export MYSQL_TEST_USER=root
+```powershell
+$env:MYSQL_TEST_ENABLE = '1'
+$env:MYSQL_TEST_HOST = '127.0.0.1'
+$env:MYSQL_TEST_PORT = '3306'
+$env:MYSQL_TEST_USER = 'root'
 # Set MYSQL_TEST_PASSWORD to your local test administrator password if required.
+# $env:MYSQL_TEST_PASSWORD = 'your-local-test-password'
 python -m pytest -q
 ```
+
+These environment variables apply only to the current PowerShell session.
 
 The integration fixture generates its own `job_tracker_test_<uuid>` database, loads `schema.sql` into it, and drops only that generated database afterward. It never accepts an application database name. Tests exercise the schema, optional seed, persistent CRUD, JSON values, FK restrictions, salary checks, and a successful CSRF form round trip. GitHub Actions runs the full suite against a MySQL 8.4 service on every push and pull request.
 
