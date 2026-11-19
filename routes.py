@@ -4,12 +4,13 @@ from mysql.connector import IntegrityError
 from database import query
 from services.entities import ENTITIES, APPLICATION_STATUSES
 from services.validation import validate, interview_rows
+from services.dashboard import dashboard_data
 
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
 def dashboard():
-    return render_template('dashboard.html')
+    return render_template('dashboard.html', title='Overview', **dashboard_data())
 
 def entity_config(entity):
     if entity not in ENTITIES:

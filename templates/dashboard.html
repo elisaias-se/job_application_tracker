@@ -1,1 +1,45 @@
-{% extends 'base.html' %}{% block content %}<h1>Your next chapter starts here.</h1><p class='muted'>Keep your search organized, one opportunity at a time.</p>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading">
+  <div><h1>Your next chapter starts here.</h1><p class="muted">A little progress today. A new opportunity tomorrow.</p></div>
+  <a class="button" href="{{ url_for('main.edit_record', entity='applications') }}">+ Track an application</a>
+</div>
+<div class="grid" aria-label="Workspace totals">
+  {% for entity, label in [('applications', 'Applications'), ('jobs', 'Saved jobs'), ('companies', 'Companies'), ('contacts', 'Contacts')] %}
+  <a class="stat" href="{{ url_for('main.list_records', entity=entity) }}"><span class="muted">{{ label }}</span><strong>{{ counts[entity] }}</strong><span class="hint">View {{ entity }} →</span></a>
+  {% endfor %}
+</div>
+<div class="dashboard-columns">
+  <section class="panel" aria-labelledby="pipeline-title">
+    <h2 id="pipeline-title">Your application pipeline</h2>
+    <p class="muted">Current status of every application.</p>
+    {% for status in statuses %}
+    <a class="pipeline-row" href="{{ url_for('main.list_records', entity='applications', status=status.name) }}">
+      <span>{{ status.name }}</span><strong>{{ status.count }}</strong>
+      <progress value="{{ status.count }}" max="{{ counts.applications or 1 }}" aria-label="{{ status.name }}: {{ status.count }} of {{ counts.applications }} applications"></progress>
+    </a>
+    {% endfor %}
+    {% if not counts.applications %}<p class="hint">Your pipeline will fill in when you add your first application.</p>{% endif %}
+  </section>
+  <section class="panel next-step" aria-labelledby="next-title">
+    <span class="eyebrow">KEEP MOVING FORWARD</span>
+    <h2 id="next-title">Make room for your next opportunity.</h2>
+    <p class="muted">Save a role that interests you, add the people you meet, and keep track of each step in your search.</p>
+    <div class="quick-links">
+      <a href="{{ url_for('main.edit_record', entity='companies') }}">Add a company <span aria-hidden="true">↗</span></a>
+      <a href="{{ url_for('main.edit_record', entity='jobs') }}">Save a job <span aria-hidden="true">↗</span></a>
+      <a href="{{ url_for('main.edit_record', entity='contacts') }}">Add a contact <span aria-hidden="true">↗</span></a>
+    </div>
+  </section>
+</div>
+<section aria-labelledby="recent-title">
+  <div class="heading"><h2 id="recent-title">Recent applications</h2><a href="{{ url_for('main.list_records', entity='applications') }}">View all →</a></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Role</th><th scope="col">Company</th><th scope="col">Applied</th><th scope="col">Status</th></tr></thead>
+    <tbody>{% for application in recent %}
+      <tr><td><a href="{{ url_for('main.detail', entity='applications', record_id=application.application_id) }}">{{ application.job_title }}</a></td><td>{{ application.company_name }}</td><td>{{ application.application_date }}</td><td><span class="badge">{{ application.status }}</span></td></tr>
+      {% else %}<tr><td class="empty" colspan="4">No applications yet. <a href="{{ url_for('main.edit_record', entity='applications') }}">Track your first application</a> to get started.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}
