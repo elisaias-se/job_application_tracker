@@ -1,57 +1,98 @@
 # AI Usage Documentation
 
-## Tools used
+## Human contribution and project direction
 
-OpenAI Codex assisted with requirement review, architecture, Python/Flask implementation, MySQL SQL, HTML/Jinja templates, CSS, JavaScript, tests, and documentation. Git, pytest, MySQL, and the Python runtime were used to verify generated work. The application does not call an AI service at runtime.
+I directed the project and used OpenAI Codex as an implementation assistant. My contributions included defining the work, reviewing the proposed approach, making interface decisions, and providing feedback while trying the application locally.
 
-## Key user prompts
+### Requirements and planning
 
-1. “Review the instructions .docx ... Before any implementation please go over what you will do to create the job application tracker, file architecture, etc.”
-2. “Please implement the app to the repository. Separate your pushes, there needs to be organized commit messages for each feature.” (Spelling normalized.)
-3. “For any push or commit please let me see what message you will put and wait for my approval. Messages should be brief but organized with feature descriptions.” (Capitalization normalized.)
-4. The user approved individual feature commit messages for companies, jobs, applications, contacts, the dashboard, and matching.
+- Provided the course specification and created the dedicated GitHub repository.
+- Required an explanation of the implementation plan and file architecture before coding began.
+- Used the specification as the basis for the required database tables, CRUD workflows, dashboard, and job matching feature.
+- Directed development to proceed in separate feature milestones rather than one large repository update.
 
-These were the actual task instructions. No additional tools, model identities, or imagined human prompts are attributed here.
+### Review and version control
+
+- Required proposed commit messages to be presented for approval before committing and pushing subsequent features.
+- Approved the companies, jobs, applications, contacts, dashboard, and matching milestones individually.
+- Supplied revised wording for the documentation/testing commit and directed how the later design update should be published.
+
+These approvals reflect decisions about development milestones and publication; they do not imply an independent line-by-line code review.
+
+### Interface design and feedback
+
+- Requested a different application name, then selected **JobTrack** instead of the AI-proposed name.
+- Specified that the white base should remain and green accents should change to blue.
+- Requested removal of unnecessary slogans, including the text at the bottom of the sidebar.
+- Reported that the running application still displayed the old branding, prompting investigation and a server restart to load the updated templates.
+
+### Local use and demonstration preparation
+
+- Asked how to run and test the application locally and how to start and connect to MySQL.
+- Reported the database-unavailable message, which prompted checking the database, account, and configuration setup.
+- Requested a walkthrough covering all features, database queries, and MySQL logs for the project recording.
+
+## AI tools and scope of assistance
+
+OpenAI Codex generated substantial portions of the Python/Flask code, SQL, HTML/Jinja templates, CSS, JavaScript, automated tests, and documentation under my direction. It also assisted with architecture, debugging, local setup instructions, and implementation verification. Human direction and feedback shaped the resulting application; the generated code and automated verification are attributed to the AI assistant.
+
+Git, pytest, MySQL, Python, and headless Google Chrome were used during verification. The finished application does not call an AI service at runtime.
+
+## Key prompts and instructions
+
+The following summarize actual requests from the development conversation:
+
+1. Review Project_Specification.docx and explain the implementation plan and file architecture before implementation.
+2. Implement the app in the dedicated repository with separate pushes and organized feature commit messages.
+3. Show each proposed commit message and wait for approval before committing or pushing.
+4. Call the application JobTrack, remove unnecessary slogans, retain the white base, and change green accents to blue.
+5. Explain how to run the application, start MySQL, and diagnose the database-unavailable message.
+6. Create a text-file walkthrough for demonstrating all features, including MySQL logs, in the project video.
 
 ## What worked well
 
-- Translating the document's four-table schema and grading categories into concrete features and an implementation sequence.
-- Using allowlisted field definitions and shared CRUD templates to provide consistent forms and avoid copying route logic for every entity.
-- Keeping SQL visible and parameterized, making joins and relationships easy to inspect for a database course.
-- Separating skill matching into a pure Python service with focused examples and edge-case tests.
-- Building feature-scoped tests while implementing each feature, then adding real MySQL lifecycle tests.
-- Organizing repository history around small feature commits rather than one large code dump.
+- Reviewing the architecture before implementation made the proposed scope concrete.
+- Feature-by-feature development made individual milestones easier to discuss and approve.
+- Specific interface feedback produced a clearer name, simpler wording, and the requested color scheme.
+- AI assistance helped build consistent CRUD workflows, visible parameterized SQL, and a separate matching service.
+- Automated tests and real MySQL checks provided evidence beyond whether a page appeared to work.
 
-## Changes made during AI-assisted development
+## Changes and refinements
 
-The following are refinements made by the AI coding agent during implementation, not claims of independent human-written changes:
+### Changes I requested
 
-- Replaced a monolithic prototype with an app factory, Blueprint, reusable entity metadata, and separate matching/dashboard services.
-- Used restricted foreign-key deletion instead of cascading removal of tracked history.
-- Added explicit server-side checks for salary bounds/order, allowed statuses and job types, dates, email/URLs, and existing parent records.
-- Added CSRF tokens and preserved form inputs when validation fails.
-- Corrected an integer-validation error path so malformed numbers return validation messages instead of a Python exception.
-- Converted required skills to JSON arrays and interviews to structured JSON objects while presenting ordinary form inputs.
-- Shared normalization between job editing and matching; prevented duplicate skills from inflating scores and sorted by unrounded scores.
-- Added unscored handling for missing requirements, empty states, and stable result ordering.
-- Kept tests that mock SQL separate from opt-in integration tests using isolated, disposable MySQL databases.
-- Added sample data and explicit clone-to-run instructions so the instructor can reproduce the application.
+- Renaming the application to JobTrack.
+- Replacing green accents with blue while keeping the white base.
+- Removing promotional slogans from the interface.
+- Organizing commits and requiring approval before feature publication.
+- Revising a proposed commit message and requesting a separate design update.
 
-The initial foundation commit/push was already in progress when the user requested individual message approval. Subsequent feature commits were presented for approval before committing/pushing.
+### Implementation refinements made with AI assistance
+
+- Organized Flask code using an app factory, Blueprint, shared entity definitions, and separate services.
+- Used foreign-key restrictions to preserve dependent records during deletion.
+- Added server-side validation for salary ranges, dates, allowed values, URLs, email, and existing parent records.
+- Added CSRF protection, escaped templates, parameterized SQL, and form-value preservation after validation errors.
+- Stored skills and interview details as JSON while exposing ordinary form controls.
+- Normalized skill names, removed duplicates, ranked by unrounded scores, and handled jobs without requirements.
+- Added sample data, setup instructions, and tests using disposable MySQL databases.
+
+These implementation refinements were carried out by Codex; they are not represented as code I independently wrote.
 
 ## Verification and limitations
 
-Tests cover the specification's matching examples, all CRUD resource routes, input validation, parameter binding, JSON conversion, CSRF, escaping, dashboard states, and dependency-related deletion errors. Real MySQL tests additionally cover schema creation, sample data, persistence, FK restrictions, salary constraints, and successful token-protected submission. See README.md for running both test modes and the GitHub Actions workflow.
+The AI-assisted verification included 120 passing pytest tests against MySQL 8.4, including four integration tests. Browser checks exercised desktop/mobile layouts, matching, CSRF-protected forms, interview controls, persistence, and deletion. After the JobTrack design changes, 116 default tests passed, with four opt-in MySQL integration tests skipped, and the revised branding, colors, and mobile layout were checked in Chrome.
 
-Verification completed: 120 pytest tests passed against MySQL 8.4, including the four integration tests. An implementation-time headless Google Chrome check also passed for desktop/mobile layout, matching, CSRF forms, interview controls, persistence, and deletion. Screenshots use only fictional seed records. The browser check is separate from the committed pytest suite.
+My contribution to verification included reporting observed setup and interface problems and directing corrections. The automated test runs and browser automation above were performed by the coding assistant. They do not establish that every browser, operating system, or deployment configuration has been tested.
 
-Automated tests are evidence of the paths they exercise, not a claim that every browser, operating system, or deployment configuration has been tested. The user should review the code, run the app, and explain its behavior in the required recording.
+README.md documents how to run the default and MySQL integration tests. AI assistance and passing tests do not replace understanding the code and explaining its behavior in the project recording.
 
-## Lessons learned
+## Lessons from the development process
 
-- Check AI output against the original rubric, particularly exact column names, ENUMs, JSON fields, and all four CRUD workflows.
-- Browser validation alone is insufficient; submitted values still need validation on the server.
-- Mock-based tests run quickly, but only a real MySQL test validates the actual schema, SQL joins, constraints, and connector behavior together.
-- Document the matching denominator explicitly: required job skills, not the number of skills entered by the user.
-- AI-assisted development does not require a paid AI API in the finished application.
-- Treat commit and publication preferences as part of the requirements, and obtain approval before each requested commit/push.
+- Human requirements, review decisions, and specific feedback influence the result throughout development.
+- Check generated work against the actual rubric, including exact schema fields and all four CRUD workflows.
+- Browser input constraints should be backed by server-side validation.
+- Mock-based tests and real database tests verify different aspects of the application.
+- Distinguish a database setup problem from an application-code defect, and cached templates from unchanged source files.
+- State the skill-matching calculation clearly: matched required skills divided by total required skills.
+- Attribute both human decisions and AI-generated implementation accurately.
